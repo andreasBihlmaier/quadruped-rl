@@ -4,6 +4,7 @@ import pybullet_data
 import time as time
 import sys
 import pinocchio as pin
+import os
 
 
 class pybullet_simulator:
@@ -288,6 +289,9 @@ class pybullet_simulator:
 
         pyb.setAdditionalSearchPath(
             "/opt/openrobots/share/example-robot-data/robots/solo_description/robots"
+        )
+        pyb.setAdditionalSearchPath(
+            os.path.join(os.environ['HOME'], "devel/workspace/install/example-robot-data/share/example-robot-data/robots/solo_description/robots")
         )
         self.robotId = pyb.loadURDF("solo12.urdf", robotStartPos, robotStartOrientation)
 
