@@ -97,7 +97,8 @@ def test_docstrings(doc):
 
 def test_qualname(doc):
     """Tests that a properly qualified name is set in __qualname__ (even in pre-3.3, where we
-    backport the attribute) and that generated docstrings properly use it and the module name"""
+    backport the attribute) and that generated docstrings properly use it and the module name
+    """
     assert m.NestBase.__qualname__ == "NestBase"
     assert m.NestBase.Nested.__qualname__ == "NestBase.Nested"
 
@@ -171,7 +172,6 @@ def test_inheritance(msg):
 
 
 def test_inheritance_init(msg):
-
     # Single base
     class Python(m.Pet):
         def __init__(self):
@@ -321,7 +321,7 @@ def test_bind_protected_functions():
 
 
 def test_brace_initialization():
-    """ Tests that simple POD classes can be constructed using C++11 brace initialization """
+    """Tests that simple POD classes can be constructed using C++11 brace initialization"""
     a = m.BraceInitialization(123, "test")
     assert a.field1 == 123
     assert a.field2 == "test"

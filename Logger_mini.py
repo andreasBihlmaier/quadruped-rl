@@ -1,14 +1,15 @@
-'''This class will log 1d array in Nd matrix from device and qualisys object'''
+"""This class will log 1d array in Nd matrix from device and qualisys object"""
 import numpy as np
 from datetime import datetime as datetime
 from time import time
 import pinocchio as pin
 
 
-#import seaborn as sns
-#sns.set_style('whitegrid')
+# import seaborn as sns
+# sns.set_style('whitegrid')
 
-class MiniLogger():
+
+class MiniLogger:
     def __init__(self, size=1e4, dt=0.001):
         print(size)
         self.command_torques = np.zeros((size, 12))
@@ -30,50 +31,60 @@ class MiniLogger():
     def plot_torques(self, plot_filtered=False):
         fig = plt.figure(1)
         if not plot_filtered:
-            plt.suptitle('Joint torque commands over time.')
+            plt.suptitle("Joint torque commands over time.")
         else:
-            plt.suptitle('Joint torque commands (purple) and filtered torques (brown) over time.')
+            plt.suptitle(
+                "Joint torque commands (purple) and filtered torques (brown) over time."
+            )
 
         t = np.arange(0, self.command_torques.shape[0]) * self.dt
 
         for i in range(12):
-            ax = plt.subplot(4, 3, i+1)
-            ax.plot(t, self.command_torques[:,i], color='purple')
+            ax = plt.subplot(4, 3, i + 1)
+            ax.plot(t, self.command_torques[:, i], color="purple")
             if plot_filtered:
-                ax.plot(t, self.filter_torques[:, i],  color='chocolate')
+                ax.plot(t, self.filter_torques[:, i], color="chocolate")
 
-        fig.text(0.5, 0.04, 'Time [sec]', ha='center')
-        fig.text(0.04, 0.5, 'Torques [Nm]', va='center', rotation='vertical')
+        fig.text(0.5, 0.04, "Time [sec]", ha="center")
+        fig.text(0.04, 0.5, "Torques [Nm]", va="center", rotation="vertical")
 
     def plot_joint_pos(self):
         fig = plt.figure(2)
         t = np.arange(0, self.command_torques.shape[0]) * self.dt
 
-        plt.suptitle('Desired and measured joint position over time')
+        plt.suptitle("Desired and measured joint position over time")
 
         for i in range(12):
-            ax = plt.subplot(4, 3, i+1)
-            if i ==0:
-                ax.plot(t, self.joint_pos[:,i], color='navy', label='q')
-                ax.plot(t, self.command_pos[:,i], color='red', linestyle='--', label='q_des')
+            ax = plt.subplot(4, 3, i + 1)
+            if i == 0:
+                ax.plot(t, self.joint_pos[:, i], color="navy", label="q")
+                ax.plot(
+                    t,
+                    self.command_pos[:, i],
+                    color="red",
+                    linestyle="--",
+                    label="q_des",
+                )
                 ax.legend()
-            ax.plot(t, self.joint_pos[:,i], color='navy')
-            ax.plot(t, self.command_pos[:,i], color='red', linestyle='--')
+            ax.plot(t, self.joint_pos[:, i], color="navy")
+            ax.plot(t, self.command_pos[:, i], color="red", linestyle="--")
 
-        fig.text(0.5, 0.04, 'Time [sec]', ha='center')
-        fig.text(0.04, 0.5, 'Joint Angle [rad]', va='center', rotation='vertical')
+        fig.text(0.5, 0.04, "Time [sec]", ha="center")
+        fig.text(0.04, 0.5, "Joint Angle [rad]", va="center", rotation="vertical")
 
     def plot_joint_vel(self):
         fig = plt.figure(3)
         t = np.arange(0, self.command_torques.shape[0]) * self.dt
 
-        plt.suptitle('Measured joint velocities over time')
+        plt.suptitle("Measured joint velocities over time")
         for i in range(12):
-            ax = plt.subplot(4, 3, i+1)
-            ax.plot(t, self.joint_vel[:,i], color='green')
+            ax = plt.subplot(4, 3, i + 1)
+            ax.plot(t, self.joint_vel[:, i], color="green")
 
-        fig.text(0.5, 0.04, 'Time [sec]', ha='center')
-        fig.text(0.04, 0.5, 'Joint Velocity [rad/sec]', va='center', rotation='vertical')
+        fig.text(0.5, 0.04, "Time [sec]", ha="center")
+        fig.text(
+            0.04, 0.5, "Joint Velocity [rad/sec]", va="center", rotation="vertical"
+        )
 
     def plot_all(self, plot_filtered=False):
         self.plot_torques(plot_filtered)
@@ -81,7 +92,7 @@ class MiniLogger():
         self.plot_joint_vel()
 
 
-class Logger():
+class Logger:
     def __init__(self, device=None, qualisys=None, logSize=60e3):
         logSize = np.int(logSize)
         self.logSize = logSize
@@ -115,7 +126,6 @@ class Logger():
         self.tstamps = np.zeros(logSize)
 
     def sample(self, device, qualisys=None):
-
         # Logging from the device (data coming from the robot)
         self.q_mes[self.k] = device.joints.positions
         self.v_mes[self.k] = device.joints.velocities
@@ -149,49 +159,62 @@ class Logger():
         self.k += 1
 
     def saveAll(self, fileName="dataSensors"):
-        date_str = datetime.now().strftime('_%Y_%m_%d_%H_%M')
+        date_str = datetime.now().strftime("_%Y_%m_%d_%H_%M")
 
-        np.savez_compressed(fileName + date_str + ".npz",
-                            q_mes=self.q_mes,
-                            v_mes=self.v_mes,
-                            baseOrientation=self.baseOrientation,
-                            baseOrientationQuat=self.baseOrientationQuat,
-                            baseAngularVelocity=self.baseAngularVelocity,
-                            baseLinearAcceleration=self.baseLinearAcceleration,
-                            baseAccelerometer=self.baseAccelerometer,
-                            torquesFromCurrentMeasurment=self.torquesFromCurrentMeasurment,
-                            current=self.current,
-                            voltage=self.voltage,
-                            energy=self.energy,
-                            mocapPosition=self.mocapPosition,
-                            mocapVelocity=self.mocapVelocity,
-                            mocapAngularVelocity=self.mocapAngularVelocity,
-                            mocapOrientationMat9=self.mocapOrientationMat9,
-                            mocapOrientationQuat=self.mocapOrientationQuat,
-                            tstamps=self.tstamps)
+        np.savez_compressed(
+            fileName + date_str + ".npz",
+            q_mes=self.q_mes,
+            v_mes=self.v_mes,
+            baseOrientation=self.baseOrientation,
+            baseOrientationQuat=self.baseOrientationQuat,
+            baseAngularVelocity=self.baseAngularVelocity,
+            baseLinearAcceleration=self.baseLinearAcceleration,
+            baseAccelerometer=self.baseAccelerometer,
+            torquesFromCurrentMeasurment=self.torquesFromCurrentMeasurment,
+            current=self.current,
+            voltage=self.voltage,
+            energy=self.energy,
+            mocapPosition=self.mocapPosition,
+            mocapVelocity=self.mocapVelocity,
+            mocapAngularVelocity=self.mocapAngularVelocity,
+            mocapOrientationMat9=self.mocapOrientationMat9,
+            mocapOrientationQuat=self.mocapOrientationQuat,
+            tstamps=self.tstamps,
+        )
 
     def processMocap(self):
-
         self.mocap_pos = np.zeros([self.logSize, 3])
         self.mocap_h_v = np.zeros([self.logSize, 3])
         self.mocap_b_w = np.zeros([self.logSize, 3])
         self.mocap_RPY = np.zeros([self.logSize, 3])
-   
+
         for i in range(self.logSize):
-            self.mocap_RPY[i] = pin.rpy.matrixToRpy(pin.Quaternion(self.mocapOrientationQuat[i]).toRotationMatrix())
+            self.mocap_RPY[i] = pin.rpy.matrixToRpy(
+                pin.Quaternion(self.mocapOrientationQuat[i]).toRotationMatrix()
+            )
 
         # Robot world to Mocap initial translation and rotation
-        mTo = np.array([self.mocapPosition[0, 0], self.mocapPosition[0, 1], 0.0])  
+        mTo = np.array([self.mocapPosition[0, 0], self.mocapPosition[0, 1], 0.0])
         mRo = pin.rpy.rpyToMatrix(0.0, 0.0, self.mocap_RPY[0, 2])
 
         for i in range(self.logSize):
             oRb = self.mocapOrientationMat9[i]
 
-            oRh = pin.rpy.rpyToMatrix(0.0, 0.0, self.mocap_RPY[i, 2] - self.mocap_RPY[0, 2])
+            oRh = pin.rpy.rpyToMatrix(
+                0.0, 0.0, self.mocap_RPY[i, 2] - self.mocap_RPY[0, 2]
+            )
 
-            self.mocap_h_v[i] = (oRh.transpose() @ mRo.transpose() @ self.mocapVelocity[i].reshape((3, 1))).ravel()
-            self.mocap_b_w[i] = (oRb.transpose() @ self.mocapAngularVelocity[i].reshape((3, 1))).ravel()
-            self.mocap_pos[i] = (mRo.transpose() @ (self.mocapPosition[i, :] - mTo).reshape((3, 1))).ravel()
+            self.mocap_h_v[i] = (
+                oRh.transpose()
+                @ mRo.transpose()
+                @ self.mocapVelocity[i].reshape((3, 1))
+            ).ravel()
+            self.mocap_b_w[i] = (
+                oRb.transpose() @ self.mocapAngularVelocity[i].reshape((3, 1))
+            ).ravel()
+            self.mocap_pos[i] = (
+                mRo.transpose() @ (self.mocapPosition[i, :] - mTo).reshape((3, 1))
+            ).ravel()
 
     def custom_suptitle(self, name):
         from matplotlib import pyplot as plt
@@ -203,7 +226,7 @@ class Logger():
     def plotAll(self, params, replay):
         from matplotlib import pyplot as plt
 
-        t_range = np.array([k*params.dt for k in range(self.logSize)])
+        t_range = np.array([k * params.dt for k in range(self.logSize)])
 
         self.processMocap()
 
@@ -221,12 +244,18 @@ class Logger():
                 ax0 = plt.subplot(3, 4, index12[i])
             else:
                 plt.subplot(3, 4, index12[i], sharex=ax0)
-            h1, = plt.plot(t_range, replay.q[:, i], color='r', linewidth=3)
-            h2, = plt.plot(t_range, self.q_mes[:, i], color='b', linewidth=3)
+            (h1,) = plt.plot(t_range, replay.q[:, i], color="r", linewidth=3)
+            (h2,) = plt.plot(t_range, self.q_mes[:, i], color="b", linewidth=3)
             plt.xlabel("Time [s]")
-            plt.ylabel(lgd1[i % 3]+" "+lgd2[int(i/3)]+" [rad]")
-            plt.legend([h1, h2], ["Ref "+lgd1[i % 3]+" "+lgd2[int(i/3)],
-                                  lgd1[i % 3]+" "+lgd2[int(i/3)]], prop={'size': 8})
+            plt.ylabel(lgd1[i % 3] + " " + lgd2[int(i / 3)] + " [rad]")
+            plt.legend(
+                [h1, h2],
+                [
+                    "Ref " + lgd1[i % 3] + " " + lgd2[int(i / 3)],
+                    lgd1[i % 3] + " " + lgd2[int(i / 3)],
+                ],
+                prop={"size": 8},
+            )
         self.custom_suptitle("Actuator positions")
 
         ####
@@ -240,12 +269,18 @@ class Logger():
                 ax0 = plt.subplot(3, 4, index12[i])
             else:
                 plt.subplot(3, 4, index12[i], sharex=ax0)
-            h1, = plt.plot(t_range, replay.v[:, i], color='r', linewidth=3)
-            h2, = plt.plot(t_range, self.v_mes[:, i], color='b', linewidth=3)
+            (h1,) = plt.plot(t_range, replay.v[:, i], color="r", linewidth=3)
+            (h2,) = plt.plot(t_range, self.v_mes[:, i], color="b", linewidth=3)
             plt.xlabel("Time [s]")
-            plt.ylabel(lgd1[i % 3]+" "+lgd2[int(i/3)]+" [rad]")
-            plt.legend([h1, h2], ["Ref "+lgd1[i % 3]+" "+lgd2[int(i/3)],
-                                  lgd1[i % 3]+" "+lgd2[int(i/3)]], prop={'size': 8})
+            plt.ylabel(lgd1[i % 3] + " " + lgd2[int(i / 3)] + " [rad]")
+            plt.legend(
+                [h1, h2],
+                [
+                    "Ref " + lgd1[i % 3] + " " + lgd2[int(i / 3)],
+                    lgd1[i % 3] + " " + lgd2[int(i / 3)],
+                ],
+                prop={"size": 8},
+            )
         self.custom_suptitle("Actuator velocities")
 
         ####
@@ -259,30 +294,44 @@ class Logger():
                 ax0 = plt.subplot(3, 4, index12[i])
             else:
                 plt.subplot(3, 4, index12[i], sharex=ax0)
-            tau_fb = replay.P[:, i] * (replay.q[:, i] - self.q_mes[:, 6]) + \
-                replay.D[:, i] * (replay.v[:, i] - self.v_mes[:, i])
-            h1, = plt.plot(t_range, replay.FF[:, i] * replay.tau[:, i], "r", linewidth=3)
-            h2, = plt.plot(t_range, tau_fb, "b", linewidth=3)
-            h3, = plt.plot(t_range, replay.FF[:, i] * replay.tau[:, i] + tau_fb, "g", linewidth=3)
-            h4, = plt.plot(t_range[:-1], self.torquesFromCurrentMeasurment[1:, i],
-                           "violet", linewidth=3, linestyle="--")
+            tau_fb = replay.P[:, i] * (replay.q[:, i] - self.q_mes[:, 6]) + replay.D[
+                :, i
+            ] * (replay.v[:, i] - self.v_mes[:, i])
+            (h1,) = plt.plot(
+                t_range, replay.FF[:, i] * replay.tau[:, i], "r", linewidth=3
+            )
+            (h2,) = plt.plot(t_range, tau_fb, "b", linewidth=3)
+            (h3,) = plt.plot(
+                t_range, replay.FF[:, i] * replay.tau[:, i] + tau_fb, "g", linewidth=3
+            )
+            (h4,) = plt.plot(
+                t_range[:-1],
+                self.torquesFromCurrentMeasurment[1:, i],
+                "violet",
+                linewidth=3,
+                linestyle="--",
+            )
             plt.xlabel("Time [s]")
-            plt.ylabel(lgd1[i % 3]+" "+lgd2[int(i/3)]+" [Nm]")
-            tmp = lgd1[i % 3]+" "+lgd2[int(i/3)]
-            plt.legend([h1, h2, h3, h4], ["FF "+tmp, "FB "+tmp, "PD+ "+tmp, "Meas "+tmp], prop={'size': 8})
+            plt.ylabel(lgd1[i % 3] + " " + lgd2[int(i / 3)] + " [Nm]")
+            tmp = lgd1[i % 3] + " " + lgd2[int(i / 3)]
+            plt.legend(
+                [h1, h2, h3, h4],
+                ["FF " + tmp, "FB " + tmp, "PD+ " + tmp, "Meas " + tmp],
+                prop={"size": 8},
+            )
             plt.ylim([-8.0, 8.0])
         self.custom_suptitle("Torques")
 
         ####
         # Power supply profile
         ####
-        
+
         plt.figure()
         for i in range(3):
             if i == 0:
-                ax0 = plt.subplot(3, 1, i+1)
+                ax0 = plt.subplot(3, 1, i + 1)
             else:
-                plt.subplot(3, 1, i+1, sharex=ax0)
+                plt.subplot(3, 1, i + 1, sharex=ax0)
 
             if i == 0:
                 plt.plot(t_range, self.current[:], linewidth=2)
@@ -310,16 +359,22 @@ class Logger():
             if i < 3:
                 plt.plot(t_range, self.mocap_pos[:, i], "k", linewidth=3)
             else:
-                plt.plot(t_range, self.mocap_RPY[:, i-3], "k", linewidth=3)
-            plt.legend(["Motion capture"], prop={'size': 8})
+                plt.plot(t_range, self.mocap_RPY[:, i - 3], "k", linewidth=3)
+            plt.legend(["Motion capture"], prop={"size": 8})
             plt.ylabel(lgd[i])
         self.custom_suptitle("Position and orientation")
 
         ####
         # Measured & Reference linear and angular velocities (horizontal frame)
         ####
-        lgd = ["Linear vel X", "Linear vel Y", "Linear vel Z",
-               "Angular vel Roll", "Angular vel Pitch", "Angular vel Yaw"]
+        lgd = [
+            "Linear vel X",
+            "Linear vel Y",
+            "Linear vel Z",
+            "Angular vel Roll",
+            "Angular vel Pitch",
+            "Angular vel Yaw",
+        ]
         plt.figure()
         for i in range(6):
             if i == 0:
@@ -330,9 +385,9 @@ class Logger():
             if i < 3:
                 plt.plot(t_range, self.mocap_h_v[:, i], "k", linewidth=3)
             else:
-                plt.plot(t_range, self.mocap_b_w[:, i-3], "k", linewidth=3)
-            
-            plt.legend(["Motion capture"], prop={'size': 8})
+                plt.plot(t_range, self.mocap_b_w[:, i - 3], "k", linewidth=3)
+
+            plt.legend(["Motion capture"], prop={"size": 8})
             plt.ylabel(lgd[i])
         self.custom_suptitle("Linear and angular velocities")
 

@@ -485,7 +485,7 @@ def test_overload_ordering():
     assert m.overload_order(0) == 4
 
     # Different for Python 2 vs. 3
-    uni_name = type(u"").__name__
+    uni_name = type("").__name__
 
     assert "1. overload_order(arg0: int) -> int" in m.overload_order.__doc__
     assert (

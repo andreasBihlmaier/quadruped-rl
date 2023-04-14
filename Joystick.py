@@ -3,7 +3,8 @@
 import numpy as np
 import gamepadClient as gC
 
-LAASGAMEPAD=1
+LAASGAMEPAD = 1
+
 
 class Joystick:
     """Joystick-like controller that outputs the reference velocity in local frame
@@ -13,7 +14,6 @@ class Joystick:
     """
 
     def __init__(self):
-
         # Reference velocity in local frame
         self.v_ref = np.array([[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]).T
         self.v_gp = np.array([[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]).T
@@ -24,15 +24,15 @@ class Joystick:
         self.alpha = 0.003  # Coefficient to low pass the joystick velocity
 
         # Joystick variables (linear and angular velocity and their scaling for the joystick)
-        self.vX = 0.
-        self.vY = 0.
-        self.vYaw = 0.
-        self.vZ = 0.
+        self.vX = 0.0
+        self.vY = 0.0
+        self.vYaw = 0.0
+        self.vZ = 0.0
         self.VxScale = 0.75
-        self.VyScale = 1.
-        self.vYawScale = .8
+        self.VyScale = 1.0
+        self.vYawScale = 0.8
         self.vZScale = 0.3
-    
+
         self.Vx_ref = 0.0
         self.Vy_ref = 0.0
         self.Vw_ref = 0.0
@@ -76,26 +76,25 @@ class Joystick:
                 self.gp.leftJoystickY.value = 0.00390625
                 self.gp.rightJoystickX.value = 0.00390625
 
-            self.vX = (self.gp.leftJoystickX.value / 0.00390625 - 1 ) * self.VxScale
-            self.vY = (self.gp.leftJoystickY.value / 0.00390625 - 1 ) * self.VyScale
-            self.vYaw = (self.gp.rightJoystickX.value / 0.00390625 - 1 ) * self.vYawScale
+            self.vX = (self.gp.leftJoystickX.value / 0.00390625 - 1) * self.VxScale
+            self.vY = (self.gp.leftJoystickY.value / 0.00390625 - 1) * self.VyScale
+            self.vYaw = (self.gp.rightJoystickX.value / 0.00390625 - 1) * self.vYawScale
 
         else:
             if k_loop == 0:
                 self.gp = gC.GamepadClient()
-                self.gp.leftJoystickX.value = 0.
-                self.gp.leftJoystickY.value = 0.
-                self.gp.rightJoystickX.value = 0.
+                self.gp.leftJoystickX.value = 0.0
+                self.gp.leftJoystickY.value = 0.0
+                self.gp.rightJoystickX.value = 0.0
 
             self.vX = self.gp.leftJoystickX.value * self.VxScale
             self.vY = self.gp.leftJoystickY.value * self.VyScale
             self.vYaw = self.gp.rightJoystickX.value * self.vYawScale
 
-
-        self.v_gp = np.array([[- self.vY, - self.vX, 0.0, 0.0, 0.0, - self.vYaw]]).T
+        self.v_gp = np.array([[-self.vY, -self.vX, 0.0, 0.0, 0.0, -self.vYaw]]).T
 
         if self.gp.startButton.value:
-            #self.reduced = not self.reduced
+            # self.reduced = not self.reduced
             self.reset = True
 
         # Switch to safety controller if the Back key is pressed
@@ -126,7 +125,7 @@ class Joystick:
 
         # Low pass filter to slow down the changes of velocity when moving the joysticks
         self.v_gp[(self.v_gp < 0.3) & (self.v_gp > -0.3)] = 0.0
-        self.v_ref = self.alpha * self.v_gp + (1-self.alpha) * self.v_ref
+        self.v_ref = self.alpha * self.v_gp + (1 - self.alpha) * self.v_ref
 
         # Update joystick code depending on which buttons are pressed
         self.computeCode()
@@ -149,10 +148,11 @@ class Joystick:
             self.joystick_code = 4
             self.northButton = False
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     from matplotlib import pyplot as plt
     from time import clock
+
     joystick = Joystick()
     joystick.update_v_ref(0, 0)
     k = 0
@@ -160,11 +160,11 @@ if __name__ == "__main__":
     fig = plt.figure()
     ax = plt.gca()
     ax.set_ylim([-2.5, 2.5])
-    h, = plt.plot(np.linspace(0.001, 1.0, 1000), vx, "b", linewidth=2)
+    (h,) = plt.plot(np.linspace(0.001, 1.0, 1000), vx, "b", linewidth=2)
     plt.xlabel("Time [s]")
     plt.ylabel("Forward reference velocity [m/s]")
     plt.show(block=False)
-    
+
     print("Start")
     while True:
         # Update the reference velocity coming from the gamepad
